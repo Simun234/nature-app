@@ -9,7 +9,7 @@ import {
 } from "../Components/apiService";
 import "../index.css";
 import "../App.css";
-import Image from "../image/robert-lukeman-_RBcxo9AU-U-unsplash 2.png";
+import { Image } from "../image/";
 
 const LoginSignup = () => {
   // State hooks

@@ -1,18 +1,17 @@
-// Import necessary libraries and components
 import React, { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   loginUser,
-  resetPassword,
   createAccount,
-  getTasks,
+  resetPassword,
 } from "../Components/apiService";
+import TaskList from "../Components/Dashboard";
+import db from "../firebase";
+import { collection, addDoc } from "firebase/firestore";
 import "../index.css";
 import "../App.css";
-import { Image } from "../image/";
 
 const LoginSignup = () => {
-  // State hooks
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -21,10 +20,11 @@ const LoginSignup = () => {
   const [showLoginForm, setShowLoginForm] = useState(true);
   const [showResetPasswordForm, setShowResetPasswordForm] = useState(false);
   const [showCreateAccountForm, setShowCreateAccountForm] = useState(false);
+  const [currentTask, setCurrentTask] = useState(null);
+  const [currentTaskIndex, setCurrentTaskIndex] = useState(0);
 
-  const navigate = useNavigate(); // Define navigate function here
+  const navigate = useNavigate();
 
-  // Callbacks for UI logic
   const handleForgotPassword = useCallback(() => {
     setShowLoginForm(false);
     setShowResetPasswordForm(true);
@@ -54,7 +54,6 @@ const LoginSignup = () => {
     clearForm();
   }, []);
 
-  // Function to handle password reset
   const handleResetPassword = async () => {
     if (!username || !newPassword || newPassword !== confirmPassword) {
       setErrorMessage("Please check your inputs");
@@ -71,7 +70,6 @@ const LoginSignup = () => {
     }
   };
 
-  // Function to handle new account creation
   const handleCreateAccount2 = async () => {
     if (!username || !password) {
       setErrorMessage("Username and password are required");
@@ -88,7 +86,6 @@ const LoginSignup = () => {
     }
   };
 
-  // Function to handle user login
   const handleLogin = async () => {
     if (!username || !password) {
       setErrorMessage("Username and password are required");
@@ -96,61 +93,46 @@ const LoginSignup = () => {
     }
 
     try {
-      const data = await loginUser(username, password);
-      console.log("Login data:", data);
+      const loginData = await loginUser(username, password);
+      const userCollection = collection(db, "users");
+      await addDoc(userCollection, { username });
 
-      if (data) {
-        // Successful login
-        localStorage.setItem("token", data.token);
+      // Set the first task as the current task
+      setCurrentTaskIndex(0); // This sets the index to the first task
+      // Assuming TaskList is imported and available here
 
-        try {
-          const tasks = await getTasks();
-          console.log("Tasks:", tasks);
-
-          if (tasks.length > 0) {
-            const navigate = useNavigate();
-            // Use navigate from react-router-dom v6 for navigation
-            navigate("/dashboard");
-          } else {
-            setErrorMessage("No tasks available");
-          }
-        } catch (taskError) {
-          console.error("Error fetching tasks:", taskError);
-          setErrorMessage("Failed to fetch tasks");
-        }
-      } else {
-        setErrorMessage("Login failed: No data received");
-      }
-    } catch (loginError) {
+      navigate("/dashboard"); // Navigate to the dashboard
+    } catch (error) {
       setErrorMessage("Failed to login");
-      console.error("Error logging in:", loginError);
+      console.error("Error logging in:", error);
     }
   };
 
-  // Form submission handler
   const handleSubmit = async (event: any) => {
     event.preventDefault();
     setErrorMessage("");
 
-    if (showResetPasswordForm) {
-      await handleResetPassword();
-    } else if (showCreateAccountForm) {
-      await handleCreateAccount2();
-    } else {
-      await handleLogin();
+    try {
+      if (showResetPasswordForm) {
+        await handleResetPassword();
+      } else if (showCreateAccountForm) {
+        await handleCreateAccount2();
+      } else {
+        await handleLogin();
+      }
+    } catch (error) {
+      console.error("An error occurred while submitting the form:", error);
+      setErrorMessage("An error occurred. Please try again later.");
     }
   };
 
-  // JSX for the component
   return (
     <div>
       <div className="flex justify-center items-center h-screen">
-        <img src={Image} alt="Background" className="w-80 h-142" />
         <form
           onSubmit={handleSubmit}
-          className=" absolute top-1/2 left-1/2 w-64 h-110 bg-green-500 opacity-85 transform -translate-x-1/2 -translate-y-1/2"
+          className="absolute top-1/2 left-1/2 w-64 h-110 bg-green-500 opacity-85 transform -translate-x-1/2 -translate-y-1/2"
         >
-          {/* Login Form */}
           {showLoginForm && (
             <>
               <h1 className="font-cursive text-2xl text-black mb-4">
@@ -177,7 +159,6 @@ const LoginSignup = () => {
               <button
                 type="submit"
                 className="btn bg-white opacity-50 w-48 h-10 my-2.5 rounded-full"
-                onClick={handleLogin}
               >
                 Login
               </button>
@@ -207,8 +188,6 @@ const LoginSignup = () => {
               </button>
             </>
           )}
-
-          {/* Reset Password Form */}
           {showResetPasswordForm && (
             <>
               <h1 className="text-2xl font-bold mb-4">Reset Your Password</h1>
@@ -243,8 +222,6 @@ const LoginSignup = () => {
               </button>
             </>
           )}
-
-          {/* Create Account Form */}
           {showCreateAccountForm && (
             <>
               <h1 className="font-[KaushanScript] text-2xl text-black">
@@ -289,3 +266,6 @@ const LoginSignup = () => {
 };
 
 export default LoginSignup;
+function setErrorMessage(arg0: string) {
+  throw new Error("Function not implemented.");
+}

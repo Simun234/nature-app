@@ -1,12 +1,5 @@
 import { initializeApp } from "firebase/app";
-import {
-  getFirestore,
-  collection,
-  getDocs,
-  query,
-  orderBy,
-  limit,
-} from "firebase/firestore/lite";
+import { getFirestore } from "firebase/firestore";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -22,17 +15,5 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-
-async function getTasks() {
-  try {
-    const tasksCol = collection(db, "tasks");
-    const tasksQuery = query(tasksCol, orderBy("CreatedAt"), limit(1));
-    const taskSnapshot = await getDocs(tasksQuery);
-    const firstTask = taskSnapshot.docs[0].data();
-    return firstTask;
-  } catch (error) {
-    console.error("Error fetching tasks:", error);
-  }
-}
 
 export default db;

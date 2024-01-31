@@ -1,70 +1,62 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+import React, { useState } from "react";
 
-const TaskComponent = () => {
-  const [task, setTask] = useState({
-    name: "",
-    description: "",
-    deadlineForSubmission: "",
-  });
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(true); // Set loading to true initially
+interface Task {
+  id: number;
+  title: string;
+  description: string;
+  Deadlineforsubmission: string;
+}
 
-  useEffect(() => {
-    const fetchFirstTask = async () => {
-      try {
-        const apiBaseUrl =
-          "https://nature-app-3fa1c-default-rtdb.firebaseio.com/api";
-        const token = localStorage.getItem("token");
+const tasks: Task[] = [
+  {
+    id: 0,
+    title: "Photo Identification Challenge",
+    description:
+      "Participate in a photo identification challenge and test your knowledge by identifying various objects, scenes, or entities within images.",
+    Deadlineforsubmission: "Three days",
+  },
+  {
+    id: 1,
+    title: "Plant a Tree Campaign",
+    description:
+      "Join our Plant a Tree Campaign and contribute to reforestation efforts by planting trees to combat climate change and preserve our environment.",
+    Deadlineforsubmission: "Five days",
+  },
+  {
+    id: 2,
+    title: "Nature Sounds and Meditation",
+    description:
+      "Immerse yourself in the serenity of nature with our Nature Sounds and Meditation sessions, designed to provide relaxation and inner peace through the soothing sounds of the natural world.",
+    Deadlineforsubmission: "Ten days",
+  },
+];
 
-        // Ensure the token exists before making the request
-        if (!token) {
-          throw new Error("No token found. Please login again.");
-        }
+const TaskList: React.FC<{}> = () => {
+  const [currentTaskIndex, setCurrentTaskIndex] = useState(0);
 
-        const response = await axios.get(`${apiBaseUrl}/get-tasks.php`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+  if (currentTaskIndex < 0 || currentTaskIndex >= tasks.length) {
+    return <div>No tasks available</div>; // Handle this case as needed
+  }
 
-        if (response.data && response.data.length > 0) {
-          setTask(response.data);
-        } else {
-          setError("No task data available.");
-        }
-      } catch (error: any) {
-        // Improved error handling
-        setError(
-          error.response?.data?.message ||
-            error.message ||
-            "An unexpected error occurred."
-        );
-        console.error("Fetch task error:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const currentTask: Task | undefined = tasks[currentTaskIndex];
 
-    fetchFirstTask();
-  }, []);
-
-  const { name, description, deadlineForSubmission } = task;
+  const handleSuccessClick = () => {
+    if (currentTaskIndex < tasks.length - 1) {
+      setCurrentTaskIndex(currentTaskIndex + 1);
+    } else {
+      alert("You've completed all tasks!");
+    }
+  };
 
   return (
     <div>
-      {loading ? (
-        <div>Loading...</div>
-      ) : (
-        <div>
-          <p>Name: {name || "Not available"}</p>
-          <p>Description: {description || "Not available"}</p>
-          <p>Deadline: {deadlineForSubmission || "Not available"}</p>
-          {error && <p>Error: {error}</p>}
-        </div>
-      )}
+      <h1>Task</h1>
+      <h2>{currentTask?.title}</h2>
+      <p>{currentTask?.description}</p>
+      <p>Deadline: {currentTask?.Deadlineforsubmission}</p>
+      <button onClick={handleSuccessClick}>Success</button>
     </div>
   );
 };
 
-export default TaskComponent;
+export default TaskList;

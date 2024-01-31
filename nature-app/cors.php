@@ -6,11 +6,8 @@ function setCorsHeaders() {
 
     if (in_array($origin, $allowedOrigins)) {
         header('Access-Control-Allow-Origin: ' . $origin);
+        header('Access-Control-Allow-Credentials: true');
     }
-
-    header('Access-Control-Allow-Methods: GET, POST, OPTIONS, PUT, PATCH, DELETE');
-    header('Access-Control-Allow-Headers: X-Requested-With, content-type');
-    header('Access-Control-Allow-Credentials: true');
 }
 
 // Handling the pre-flight request
@@ -20,13 +17,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
+// Set CORS headers for all requests
+setCorsHeaders();
+
 // Include external files for additional functions (if you have them)
 include_once 'user_validation.php';
 include_once 'token_management.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    setCorsHeaders();
-    
     // Verify content type is JSON
     if ($_SERVER['CONTENT_TYPE'] !== 'application/json') {
         http_response_code(415); // Unsupported Media Type

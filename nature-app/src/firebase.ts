@@ -1,5 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
+import { getAuth } from "firebase/auth"; // Import for Firebase Authentication
+import { getDatabase } from "firebase/database"; // Import for Firebase Realtime Database
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -13,7 +15,16 @@ const firebaseConfig = {
   measurementId: "G-CQ5D0Y7S5P",
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
+
+// Get a Firestore instance
 const db = getFirestore(app);
 
-export default db;
+// Get a Firebase Auth instance
+const auth = getAuth(app);
+
+// Get a Firebase Realtime Database instance
+const realtimeDb = getDatabase(app);
+
+export { db, auth, realtimeDb };

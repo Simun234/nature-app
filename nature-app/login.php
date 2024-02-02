@@ -4,10 +4,23 @@ include "cors.php";  // This should handle the CORS setup
 $username = $_POST['username'];
 $password = $_POST['password'];
 
+function queryUserByUsername($username){
+    /*  actual database query to retrieve user information */
+    $query = "SELECT * FROM users WHERE username = :username";
+    /* // Assuming $pdo is a valid PDO database connection  */
+    $statement = $pdo->prepare($query);
+    $statement->bindParam("username", $username, PDO::PARAM_STR);
+    $statement->execute();
+
+    $user = $statement->fetch(PDO::FETCH_ASSOC);
+
+    return $user ? $user : false;
+}
+
 function isValidUser($username, $password) {
     $user = queryUserByUsername($username);
 
-    if ($user && $user['password'] === $password) {
+    if ($user && password_verify($password, $user['password'])) {
         return true;
     }
 

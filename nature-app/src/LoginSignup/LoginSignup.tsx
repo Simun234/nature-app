@@ -6,8 +6,8 @@ import {
   resetPassword,
 } from "../Components/apiService";
 import TaskList from "../Components/Dashboard";
-import db from "../firebase";
-import { collection, addDoc } from "firebase/firestore";
+import { auth } from "../firebase";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import "../index.css";
 import "../App.css";
 
@@ -92,35 +92,84 @@ const LoginSignup = () => {
       return;
     }
 
+    if (!validateEmail(username)) {
+      setErrorMessage(
+        "Please enter a valid email address. (example: user@example.com)"
+      );
+      return;
+    }
+
+    if (password.length < 6) {
+      setErrorMessage("Password must be at least 6 characters");
+      return;
+    }
+
     try {
-      const loginData = await loginUser(username, password);
-      const userCollection = collection(db, "users");
-      await addDoc(userCollection, { username });
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        username,
+        password
+      );
+      console.log(userCredential.user);
 
-      // Set the first task as the current task
-      setCurrentTaskIndex(0); // This sets the index to the first task
-      // Assuming TaskList is imported and available here
-
-      navigate("/dashboard"); // Navigate to the dashboard
-    } catch (error) {
-      setErrorMessage("Failed to login");
-      console.error("Error logging in:", error);
+      setCurrentTaskIndex(0);
+      navigate("/dashboard");
+      setErrorMessage("");
+    } catch (error: any) {
+      console.log("Error logging in:", error);
+      let errorMessage = "Failed to login";
+      if (error.code) {
+        switch (error.code) {
+          case "auth/invalid-email":
+            errorMessage =
+              "Invalid email format. Please enter a correct email.";
+            break;
+          case "auth/user-disabled":
+            errorMessage = "User account has been disabled.";
+            break;
+          case "auth/user-not-found":
+            errorMessage = "User not found. Please sign up.";
+            break;
+          case "auth/wrong-password":
+            errorMessage = "Incorrect password. Please try again.";
+            break;
+          case "auth/invalid-credential":
+            errorMessage =
+              "Invalid credential. Please check your login details.";
+            break;
+          default:
+            errorMessage = "Failed to log in. Please try again.";
+            break;
+        }
+      } else {
+        errorMessage = error.message || errorMessage;
+      }
+      setErrorMessage(errorMessage);
     }
   };
 
+  function validateEmail(email: string) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email.toLowerCase());
+  }
+
   const handleSubmit = async (event: any) => {
     event.preventDefault();
-    setErrorMessage("");
+    setErrorMessage(""); // Clear any existing error messages
 
     try {
       if (showResetPasswordForm) {
+        // If it's the reset password form, handle the reset password logic
         await handleResetPassword();
       } else if (showCreateAccountForm) {
+        // If it's the create account form, handle the account creation logic
         await handleCreateAccount2();
       } else {
-        await handleLogin();
+        // If it's the login form, handle the login logic
+        await handleLogin(); // This is essentially the simpler version you provided
       }
     } catch (error) {
+      // Log the error and set an error message to be displayed to the user
       console.error("An error occurred while submitting the form:", error);
       setErrorMessage("An error occurred. Please try again later.");
     }
@@ -139,9 +188,9 @@ const LoginSignup = () => {
                 Login to your account
               </h1>
               <input
-                type="text"
+                type="email"
                 id="username"
-                placeholder="Username"
+                placeholder="Email"
                 autoComplete="off"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
@@ -228,13 +277,13 @@ const LoginSignup = () => {
                 Create an Account
               </h1>
               <input
-                type="text"
-                placeholder="Username"
-                id="new-username"
-                className="bg-white opacity-50 w-48 h-10 my-2.5 rounded-full p-2"
+                type="email"
+                id="username"
+                placeholder="Email"
                 autoComplete="off"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
+                className="bg-white opacity-50 w-48 h-10 my-2.5 rounded-full p-2 text-black"
               />
               <input
                 type="password"
@@ -260,12 +309,10 @@ const LoginSignup = () => {
             </>
           )}
         </form>
+        {errorMessage && <div>{errorMessage}</div>}
       </div>
     </div>
   );
 };
 
 export default LoginSignup;
-function setErrorMessage(arg0: string) {
-  throw new Error("Function not implemented.");
-}

@@ -1,13 +1,8 @@
 import axios, { AxiosResponse } from "axios";
-import {
-  doc,
-  updateDoc,
-  setDoc,
-  collection,
-  getDocs,
-} from "firebase/firestore";
 import { db, auth, realtimeDb } from "../firebase";
 import { FirebaseError } from "firebase/app";
+import { ref, set } from "firebase/database";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 
 // Set up Axios defaults
 axios.defaults.baseURL = "https://nature-app-3fa1c-default-rtdb.firebaseio.com";
@@ -40,31 +35,25 @@ export const loginUser = async (email: string, password: string) => {
   }
 };
 
-export const resetPassword = async (email: string, newPassword: string) => {
-  try {
-    const userRef = doc(collection(db, "users"), email); // Use collection function to get a reference to "users" collection
-    await updateDoc(userRef, { password: newPassword });
-    return "Password reset successfully!";
-  } catch (error) {
-    console.error("Error resetting password:", error);
-    throw error;
-  }
-};
-
 export const createAccount = async (email: string, password: string) => {
   try {
-    const userRef = doc(collection(db, "users"), email);
-    await setDoc(userRef, { password });
+    const userCredential = await createUserWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+    const user = userCredential.user;
+
+    // You can still create a user record in your Realtime Database if needed
+    const userRef = ref(realtimeDb, "users/" + user.uid); // Using UID as key
+    await set(userRef, { email }); // Storing email or any other data you need
+
     return "Account created successfully!";
   } catch (error) {
     console.error("Error creating account:", error);
     if (error instanceof FirebaseError) {
-      if (error.code === "permission-denied") {
-        throw new Error(
-          "Permission denied. Please check your Firebase security rules."
-        );
-      }
-      // Handle other specific error cases if needed
+      // Handle Firebase errors
+      throw new Error(error.message);
     }
     throw error; // Re-throw the original error if it's not a known FirebaseError
   }

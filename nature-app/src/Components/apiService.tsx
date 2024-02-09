@@ -1,5 +1,5 @@
 import axios, { AxiosResponse } from "axios";
-import { db, auth, realtimeDb } from "../firebase";
+import { auth, realtimeDb } from "../firebase";
 import { FirebaseError } from "firebase/app";
 import { ref, set } from "firebase/database";
 import { createUserWithEmailAndPassword } from "firebase/auth";

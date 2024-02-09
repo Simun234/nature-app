@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   createUserWithEmailAndPassword,
@@ -14,7 +14,7 @@ const LoginSignup = () => {
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [showLoginForm, setShowLoginForm] = useState(true);
-  const [successMessage, setSuccessMessage] = useState("");
+  const [, setSuccessMessage] = useState("");
 
   const navigate = useNavigate();
   const db = getFirestore();
@@ -203,6 +203,6 @@ const LoginSignup = () => {
 };
 
 export default LoginSignup;
-function setShowCreateAccountForm(arg0: boolean) {
+function setShowCreateAccountForm(_arg0: boolean) {
   throw new Error("Function not implemented.");
 }

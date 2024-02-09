@@ -1,4 +1,5 @@
-import { useState } from "react";
+import React from "react";
+import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import {
   createUserWithEmailAndPassword,
@@ -6,86 +7,24 @@ import {
 } from "firebase/auth";
 import { doc, setDoc, getFirestore } from "firebase/firestore";
 import { auth } from "../firebase";
+import Image from "../image/background-image.jpg";
 import "../index.css";
 import "../App.css";
 
 const LoginSignup = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
-  const [showLoginForm, setShowLoginForm] = useState(true);
-  const [, setSuccessMessage] = useState("");
-
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm();
   const navigate = useNavigate();
   const db = getFirestore();
+  const [showLoginForm, setShowLoginForm] = React.useState(true);
+  const [errorMessage, setErrorMessage] = React.useState("");
 
-  const clearForm = () => {
-    setEmail("");
-    setPassword("");
-    setErrorMessage("");
-  };
-
-  const handleCreateAccountView = () => {
-    setShowLoginForm(false);
-    clearForm();
-  };
-
-  const handleBackToLogin = () => {
-    setShowLoginForm(true);
-    clearForm();
-  };
-
-  const validateEmail = (email: string) => {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(String(email).toLowerCase());
-  };
-
-  const handleCreateAccount = async () => {
-    if (!email.trim() || !password.trim()) {
-      setErrorMessage("Email and password are required.");
-      return;
-    }
-
-    if (!validateEmail(email)) {
-      setErrorMessage(
-        "Please enter a valid email address. (example: user@example.com)"
-      );
-      return;
-    }
-
-    if (password.length < 8) {
-      setErrorMessage("Password must be at least 8 characters.");
-      return;
-    }
-
-    try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-      console.log("Account created:", userCredential.user);
-
-      await setDoc(doc(db, "users", userCredential.user.uid), {
-        email: email,
-      });
-
-      setSuccessMessage("Account created successfully! Please login.");
-      setShowLoginForm(true);
-      setShowCreateAccountForm(false);
-      clearForm();
-    } catch (error: any) {
-      console.log("Error creating account:", error);
-      setErrorMessage(error.message || "Failed to create account");
-    }
-  };
-
-  const handleLogin = async () => {
-    if (!email.trim() || !password.trim()) {
-      setErrorMessage("Email and password are required.");
-      return;
-    }
-
+  const onLoginSubmit = async (data: { email: any; password: any }) => {
+    const { email, password } = data;
     try {
       const userCredential = await signInWithEmailAndPassword(
         auth,
@@ -102,101 +41,63 @@ const LoginSignup = () => {
     }
   };
 
-  const handleSubmit = async (event: { preventDefault: () => void }) => {
-    event.preventDefault();
-    setErrorMessage(""); // Clear any existing error messages
+  const onSignupSubmit = async (data: { email: any; password: any }) => {
+    const { email, password } = data;
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      console.log("Account created:", userCredential.user);
 
-    if (!showLoginForm) {
-      await handleCreateAccount();
-    } else {
-      await handleLogin();
+      await setDoc(doc(db, "users", userCredential.user.uid), {
+        email,
+      });
+
+      reset();
+      setShowLoginForm(true); // Switch to login form after successful signup
+      setErrorMessage("Account created successfully! Please login.");
+    } catch (error: any) {
+      console.log("Error creating account:", error);
+      setErrorMessage(error.message || "Failed to create account.");
     }
   };
 
+  const handleFormSwitch = () => {
+    setShowLoginForm(!showLoginForm);
+    setErrorMessage("");
+    reset();
+  };
+
   return (
-    <div>
-      <div className="flex justify-center items-center h-screen">
-        <form
-          onSubmit={handleSubmit}
-          className="absolute top-1/2 left-1/2 w-64 h-110 bg-green-500 opacity-85 transform -translate-x-1/2 -translate-y-1/2"
+    <div className="relative">
+      <img className="w-full h-full" src={Image} alt="Your image" />
+      <div className="bg-white bg-opacity-30 shadow  absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 lg:w-96 lg:h-96  md:w-64 md:h-64 sm:w-48 sm:h-64">
+        <h1 className=" font-sans text-2xl text-black p-1 lg:text-3xl md:text-2xl sm:text-lg ">
+          Login To Your Account!
+        </h1>
+        <input
+          className="bg-white bg-opacity-50 rounded-2xl text-black font-bold  mt-3 lg:w-80  lg:h-11 lg:text-xl sm:w-40 sm:h-6 sm:text-sm"
+          type="text"
+          placeholder="Email"
+        />
+        <input
+          className="bg-white bg-opacity-50 rounded-2xl text-black font-bold  mt-4 lg:w-80  lg:h-11 lg:text-xl sm:w-40 sm:h-6 sm:text-sm"
+          type="text"
+          placeholder="Password"
+        />
+        <br />
+        <button
+          type="submit"
+          className="bg-white bg-opacity-50 rounded-2xl text-black font-bold mt-6 lg:w-32 lg:h-11 sm:w-24 sm:h-8"
         >
-          {showLoginForm ? (
-            <>
-              <h1 className="font-cursive text-2xl text-black mb-4">
-                Login to your account
-              </h1>
-              <input
-                type="email"
-                name="email"
-                placeholder="Email"
-                autoComplete="off"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="bg-white opacity-50 w-48 h-10 my-2.5 rounded-full p-2 text-black"
-              />
-              <input
-                type="password"
-                name="password"
-                placeholder="Password"
-                autoComplete="off"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="bg-white opacity-50 w-48 h-10 my-2.5 rounded-full p-2"
-              />
-              <button
-                type="submit"
-                className="btn bg-white opacity-50 w-48 h-10 my-2.5 rounded-full"
-              >
-                Login
-              </button>
-              <button
-                type="button"
-                className="forgot bg-white opacity-50 w-full h-10 text-sm mb-2 rounded-full"
-                onClick={handleCreateAccountView}
-              >
-                Create an Account
-              </button>
-            </>
-          ) : (
-            <>
-              <h1 className="font-[KaushanScript] text-2xl text-black">
-                Create an Account
-              </h1>
-              <input
-                type="email"
-                name="email"
-                placeholder="Email"
-                autoComplete="off"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="bg-white opacity-50 w-48 h-10 my-2.5 rounded-full p-2 text-black"
-              />
-              <input
-                type="password"
-                name="password"
-                placeholder="Password"
-                autoComplete="new-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="bg-white opacity-50 w-48 h-10 my-2.5 rounded-full p-2"
-              />
-              <button
-                type="submit"
-                className="btn bg-white opacity-50 w-48 h-10 my-2.5 rounded-full"
-              >
-                Create Account
-              </button>
-              <button
-                type="button"
-                className="forgot bg-white opacity-50 w-full h-10 text-sm mb-2 rounded-full"
-                onClick={handleBackToLogin}
-              >
-                Back to Login
-              </button>
-            </>
-          )}
-        </form>
-        {errorMessage && <div>{errorMessage}</div>}
+          Login
+        </button>
+        <br />
+        <button className="bg-white bg-opacity-50 rounded-2xl text-black font-bold  mt-5 lg:w-80  lg:h-11 lg:text-xl sm:w-40 sm:h-6 sm:text-sm">
+          Create New Account
+        </button>
       </div>
     </div>
   );

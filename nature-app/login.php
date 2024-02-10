@@ -1,7 +1,7 @@
 <?php
-include "cors.php";  // This should handle the CORS setup
+include "cors.php"; // Include CORS configuration
 
-// Database connection setup
+// Database configuration
 $host = 'your_host';
 $db   = 'your_db';
 $user = 'your_user';
@@ -14,48 +14,52 @@ $options = [
     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
     PDO::ATTR_EMULATE_PREPARES   => false,
 ];
+
+// Establishing a database connection
 try {
-     $pdo = new PDO($dsn, $user, $pass, $options);
+    $pdo = new PDO($dsn, $user, $pass, $options);
 } catch (\PDOException $e) {
-     throw new \PDOException($e->getMessage(), (int)$e->getCode());
+    error_log($e->getMessage());
+    http_response_code(500);
+    echo json_encode(["error" => "Database connection failed"]);
+    exit;
 }
 
-// Function definitions
-function queryUserByUsername($pdo, $username) {
-    $query = "SELECT * FROM users WHERE username = :username";
-    $statement = $pdo->prepare($query);
-    $statement->bindParam(":username", $username, PDO::PARAM_STR);
-    $statement->execute();
-    $user = $statement->fetch(PDO::FETCH_ASSOC);
-    return $user ? $user : false;
-}
+// Handling login requests
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $data = json_decode(file_get_contents('php://input'), true);
 
-function isValidUser($pdo, $username, $password) {
-    $user = queryUserByUsername($pdo, $username);
-    if ($user && password_verify($password, $user['password'])) {
-        return true;
+    $username = $data['username'] ?? '';
+    $password = $data['password'] ?? '';
+
+    if (empty($username) || empty($password)) {
+        http_response_code(400);
+        echo json_encode(["error" => "Username and password are required"]);
+        exit;
     }
-    return false;
-}
 
-function generateToken($username) {
-    $randomBytes = random_bytes(32);
-    $token = base64_encode($randomBytes);
-    $token .= '_' . $username;
-    return $token;
-}
+    // Function to validate user credentials
+    function isValidUser($pdo, $username, $password) {
+        $stmt = $pdo->prepare("SELECT * FROM users WHERE username = :username");
+        $stmt->execute(['username' => $username]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-// Request handling
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // Login or token generation request
-    $username = $_POST['username'];
-    $password = $_POST['password'];
+        return $user && password_verify($password, $user['password']);
+    }
+
+    // Attempt to authenticate the user
     if (isValidUser($pdo, $username, $password)) {
-        $token = generateToken($username);
-        echo json_encode(["token" => $token]);
+        // Token generation (replace this with your actual token generation logic)
+        $token = bin2hex(random_bytes(32));
+        http_response_code(200);
+        echo json_encode(["status" => "success", "token" => $token]);
     } else {
         http_response_code(401);
         echo json_encode(["error" => "Invalid credentials"]);
     }
+} else {
+    // Method Not Allowed
+    http_response_code(405);
+    echo json_encode(["error" => "Method not allowed"]);
 }
 ?>

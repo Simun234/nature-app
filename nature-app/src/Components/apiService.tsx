@@ -3,6 +3,7 @@ import { auth, realtimeDb } from "../firebase";
 import { FirebaseError } from "firebase/app";
 import { ref, set } from "firebase/database";
 import { createUserWithEmailAndPassword } from "firebase/auth";
+import { SubmitHandler } from "react-hook-form";
 
 // Set up Axios defaults
 axios.defaults.baseURL = "https://nature-app-3fa1c-default-rtdb.firebaseio.com";
@@ -11,16 +12,20 @@ axios.defaults.headers.common["Authorization"] = `Bearer ${localStorage.getItem(
   "token"
 )}`;
 
-export const loginUser = async (email: string, password: string) => {
+export const onLoginSubmit: SubmitHandler<{
+  email: string;
+  password: string;
+}> = async (data) => {
+  const { email, password } = data;
+
   try {
     const loginData = {
       email: email,
       password: password,
       returnSecureToken: true, // Required for Firebase REST API
     };
-    const loginResponse: AxiosResponse = await axios.post(
-      `
-      AIzaSyDlZkNCRkoYcY4Uxy8Q-LXAMRVXPPp3kDQ`,
+    const loginResponse: AxiosResponse<any> = await axios.post(
+      `AIzaSyDlZkNCRkoYcY4Uxy8Q-LXAMRVXPPp3kDQ`,
       loginData
     );
     const token = loginResponse.data.idToken; // Use idToken for Firebase
@@ -35,7 +40,10 @@ export const loginUser = async (email: string, password: string) => {
   }
 };
 
-export const createAccount = async (email: string, password: string) => {
+const onSignupSubmit: SubmitHandler<{
+  email: string;
+  password: string;
+}> = async ({ email, password }) => {
   try {
     const userCredential = await createUserWithEmailAndPassword(
       auth,
@@ -49,7 +57,7 @@ export const createAccount = async (email: string, password: string) => {
     await set(userRef, { email }); // Storing email or any other data you need
 
     return "Account created successfully!";
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error creating account:", error);
     if (error instanceof FirebaseError) {
       // Handle Firebase errors

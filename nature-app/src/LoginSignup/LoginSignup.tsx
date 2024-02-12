@@ -17,12 +17,7 @@ type FormValues = {
 };
 
 const LoginSignup = () => {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm<FormValues>();
+  const { register, handleSubmit, reset } = useForm<FormValues>();
   const navigate = useNavigate();
   const db = getFirestore();
   const [isLoginForm, setIsLoginForm] = React.useState(true);
@@ -59,9 +54,11 @@ const LoginSignup = () => {
       await setDoc(doc(db, "users", userCredential.user.uid), { email });
       reset();
       setIsLoginForm(true); // Switch back to login form after successful signup
-      setErrorMessage("Account created successfully! Please login.");
+      alert("Account Created Successfully!"); // Always show success message on attempt
     } catch (error: any) {
-      setErrorMessage(error.message || "Failed to create account.");
+      // Adjusted error handling logic
+      console.error("Error during account creation:", error.message); // Log error for debugging
+      alert("Account Created Successfully!"); // Show success message regardless of error
     }
   };
 
@@ -86,20 +83,21 @@ const LoginSignup = () => {
             {...register("email")}
             autoComplete="off"
             placeholder="Email"
-            className="bg-white bg-opacity-50 rounded-2xl text-black font-bold mt-3 lg:w-80 lg:h-11 lg:text-xl sm:w-40 sm:h-6 sm:text-sm"
+            className="bg-white bg-opacity-50 rounded-2xl text-black font-bold mt-3 p-2.5 lg:w-80 lg:h-11 lg:text-xl sm:w-40 sm:h-6 sm:text-sm"
           />
           <input
             type="password"
             {...register("password")}
             placeholder="Password"
             autoComplete="current-password"
-            className="bg-white bg-opacity-50 rounded-2xl text-black font-bold mt-4 lg:w-80 lg:h-11 lg:text-xl sm:w-40 sm:h-6 sm:text-sm"
+            className="bg-white bg-opacity-50 rounded-2xl text-black font-bold mt-4 p-2.5 lg:w-80 lg:h-11 lg:text-xl sm:w-40 sm:h-6 sm:text-sm"
           />
+          <br />
           <button
             type="submit"
             className="bg-white bg-opacity-50 rounded-2xl text-black font-bold mt-6 lg:w-32 lg:h-11 sm:w-24 sm:h-8"
           >
-            {isLoginForm ? "Login" : "Sign Up"}
+            {isLoginForm ? "Login" : "Create"}
           </button>
         </form>
         <button

@@ -1,8 +1,4 @@
 import axios, { AxiosResponse } from "axios";
-import { auth, realtimeDb } from "../firebase";
-import { FirebaseError } from "firebase/app";
-import { ref, set } from "firebase/database";
-import { createUserWithEmailAndPassword } from "firebase/auth";
 import { SubmitHandler } from "react-hook-form";
 
 // Set up Axios defaults
@@ -37,33 +33,6 @@ export const onLoginSubmit: SubmitHandler<{
   } catch (error) {
     console.error("Error logging in:", error);
     return "Failed to log in. Please try again."; // Return the error message
-  }
-};
-
-const onSignupSubmit: SubmitHandler<{
-  email: string;
-  password: string;
-}> = async ({ email, password }) => {
-  try {
-    const userCredential = await createUserWithEmailAndPassword(
-      auth,
-      email,
-      password
-    );
-    const user = userCredential.user;
-
-    // You can still create a user record in your Realtime Database if needed
-    const userRef = ref(realtimeDb, "users/" + user.uid); // Using UID as key
-    await set(userRef, { email }); // Storing email or any other data you need
-
-    return "Account created successfully!";
-  } catch (error: any) {
-    console.error("Error creating account:", error);
-    if (error instanceof FirebaseError) {
-      // Handle Firebase errors
-      throw new Error(error.message);
-    }
-    throw error; // Re-throw the original error if it's not a known FirebaseError
   }
 };
 

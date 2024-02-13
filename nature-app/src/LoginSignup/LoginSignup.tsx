@@ -22,7 +22,7 @@ const LoginSignup = () => {
   const db = getFirestore();
   const [isLoginForm, setIsLoginForm] = React.useState(true);
   const [errorMessage, setErrorMessage] = React.useState("");
-  const [rememberMe] = React.useState(false);
+  const [rememberMe, setRememberMe] = React.useState(false);
 
   const onLoginSubmit: SubmitHandler<FormValues> = async ({
     email,
@@ -65,9 +65,15 @@ const LoginSignup = () => {
     reset();
   };
 
-  function handleRememberMeChange(_event: ChangeEvent<HTMLInputElement>): void {
-    throw new Error("Function not implemented.");
-  }
+  const handleRememberMeChange = (
+    event: ChangeEvent<HTMLInputElement>
+  ): void => {
+    setRememberMe(event.target.checked);
+  };
+
+  const handleResetPassword = () => {
+    navigate("/reset-password");
+  };
 
   return (
     <div className="relative">
@@ -107,9 +113,10 @@ const LoginSignup = () => {
             </label>
             <button
               type="button"
+              onClick={handleResetPassword}
               className="bg-white bg-opacity-50 rounded-2xl text-black font-bold lg:w-32 lg:h-11 lg:text-base lg:mr-1 sm:w-24 sm:h-8 text-xs mr-1"
             >
-              Reset Password
+              Forgot Password
             </button>
           </div>
           <button

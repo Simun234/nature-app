@@ -117,7 +117,7 @@ const QuestionList: React.FC<{}> = () => {
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white bg-opacity-30 shadow p-8 rounded-lg">
         {currentQuestion && (
           <div>
-            <p className="text-black font-bold">{currentQuestion.question}</p>
+            <p className="text-white font-bold">{currentQuestion.question}</p>
             {currentQuestion.options.map((option, index) => (
               <div key={index}>
                 <input
